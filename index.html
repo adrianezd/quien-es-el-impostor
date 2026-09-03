@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>¿Quién es el Impostor? — Juego de fiesta gratis para grupos</title>
+<meta name="description" content="Juego del impostor gratis, sin descargar ninguna app. Un solo móvil, se pasa entre los jugadores: cada uno ve en privado si le toca una palabra secreta o el rol de impostor. Ideal para fiestas, quedadas y viajes en grupo. Funciona sin internet una vez cargada la página.">
+<meta name="keywords" content="juego del impostor, juego del impostor gratis, juego de fiesta, juego para grupos, juego sin descargar app, juego de móvil para fiestas, juego de palabras, quien es el impostor, juegos para reuniones, juegos sin internet">
+<link rel="canonical" href="https://adrianezd.github.io/quien-es-el-impostor/">
+
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#14101f">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+
+<!-- Open Graph -->
+<meta property="og:title" content="¿Quién es el Impostor? — Juego de fiesta gratis para grupos">
+<meta property="og:description" content="Un solo móvil, todo el grupo. Descubre quién es el impostor antes de que descubra la palabra secreta. Gratis, sin descargas, sin internet.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://adrianezd.github.io/quien-es-el-impostor/">
+<meta property="og:image" content="https://adrianezd.github.io/quien-es-el-impostor/favicon.svg">
+<meta property="og:locale" content="es_ES">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="¿Quién es el Impostor? — Juego de fiesta gratis para grupos">
+<meta name="twitter:description" content="Un solo móvil, todo el grupo. Descubre quién es el impostor antes de que descubra la palabra secreta. Gratis, sin descargas, sin internet.">
+<meta name="twitter:image" content="https://adrianezd.github.io/quien-es-el-impostor/favicon.svg">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Game",
+      "name": "¿Quién es el Impostor?",
+      "description": "Juego de fiesta para grupos, para jugar en un solo móvil compartido. A cada jugador se le asigna en privado una palabra secreta o el rol de impostor; el grupo debate y vota para descubrir quién es el impostor.",
+      "genre": ["Juego de fiesta", "Juego de palabras", "Juego social"],
+      "applicationCategory": "Game",
+      "gamePlatform": "Web Browser",
+      "url": "https://adrianezd.github.io/quien-es-el-impostor/",
+      "inLanguage": "es",
+      "isAccessibleForFree": true,
+      "numberOfPlayers": {
+        "@type": "QuantitativeValue",
+        "minValue": 3,
+        "maxValue": 15
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "¿Necesito descargar una app?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No, funciona directamente en el navegador de tu móvil, no requiere descargar ni instalar nada."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Cuántos jugadores necesito?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Puedes jugar con un mínimo de 3 y un máximo de 15 jugadores."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Es gratis?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Sí, el juego es completamente gratuito y no tiene anuncios ni compras dentro de la app."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Funciona sin internet?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Una vez cargada la página, el juego funciona sin conexión porque todo ocurre en tu propio móvil."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Necesitamos varios móviles?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No, con un solo móvil compartido entre todos los jugadores es suficiente; se va pasando de mano en mano."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Se guardan las palabras secretas o los roles?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No, cada ronda se genera en el momento y se borra de la memoria al terminar o si recargas la página, así nadie puede hacer trampas."
+          }
+        }
+      ]
+    }
+  ]
+}
+</script>
+</head>
+<body>
+
+<header class="site-header">
+  <h1>¿Quién es el Impostor?</h1>
+  <p class="tagline">El juego de fiesta de una sola palabra secreta. Un móvil, todo el grupo.</p>
+</header>
+
+<main>
+
+  <div id="game-app">
+
+    <!-- ============================= SETUP ============================= -->
+    <section class="screen" data-screen="setup">
+      <h2 class="visually-hidden">Preparar partida</h2>
+
+      <div class="setup-block">
+        <label class="setup-label" id="player-count-label">Número de jugadores</label>
+        <div class="stepper" role="group" aria-labelledby="player-count-label">
+          <button type="button" id="btn-player-minus" class="stepper-btn" aria-label="Restar jugador">−</button>
+          <span class="stepper-value" id="player-count-value">5</span>
+          <button type="button" id="btn-player-plus" class="stepper-btn" aria-label="Sumar jugador">+</button>
+        </div>
+      </div>
+
+      <div class="setup-block">
+        <label class="setup-label" id="impostor-count-label">Número de impostores</label>
+        <div class="stepper" role="group" aria-labelledby="impostor-count-label">
+          <button type="button" id="btn-impostor-minus" class="stepper-btn" aria-label="Restar impostor">−</button>
+          <span class="stepper-value" id="impostor-count-value">1</span>
+          <button type="button" id="btn-impostor-plus" class="stepper-btn" aria-label="Sumar impostor">+</button>
+        </div>
+        <p class="setup-hint" id="impostor-hint">Máximo 2 para 5 jugadores</p>
+      </div>
+
+      <div class="setup-block">
+        <span class="setup-label" id="category-label">Categoría de palabras</span>
+        <div class="category-options" id="category-options" role="radiogroup" aria-labelledby="category-label"></div>
+      </div>
+
+      <button type="button" id="btn-start-game" class="btn btn-primary btn-large">Crear sala</button>
+    </section>
+
+    <!-- ============================= REVEAL ============================= -->
+    <section class="screen" data-screen="reveal" hidden>
+      <div class="reveal-wrap">
+        <p class="reveal-progress" id="reveal-progress">Jugador 1 de 5</p>
+        <h2 class="reveal-player-label" id="reveal-player-label">Pasa el móvil a Jugador 1</h2>
+        <p class="reveal-warning">⚠️ Solo esta persona debe mirar la pantalla</p>
+
+        <button type="button" id="hold-reveal-btn" class="hold-button" aria-describedby="hold-prompt">
+          <span id="hold-prompt">Mantén pulsado<br>para ver tu rol</span>
+          <div id="role-panel" class="role-panel" hidden>
+            <span id="role-category-label" class="role-category-label"></span>
+            <span id="role-content" class="role-content"></span>
+          </div>
+        </button>
+
+        <button type="button" id="btn-next-player" class="btn btn-secondary btn-large" disabled>Ya lo vi, pasar al siguiente</button>
+      </div>
+    </section>
+
+    <!-- =========================== DISCUSSION ============================ -->
+    <section class="screen" data-screen="discussion" hidden>
+      <div class="discussion-wrap">
+        <h2>¡Todos listos! Empieza el debate</h2>
+        <p class="discussion-help">Hablad, haced preguntas y buscad pistas sobre la palabra secreta. Intentad descubrir quién es el impostor antes de que se acabe el tiempo.</p>
+
+        <div class="timer-block">
+          <span class="timer-display" id="timer-display">03:00</span>
+          <div class="timer-controls">
+            <button type="button" id="btn-timer-minus" class="btn btn-ghost" aria-label="Restar 30 segundos">−30s</button>
+            <button type="button" id="btn-timer-toggle" class="btn btn-ghost">Pausar</button>
+            <button type="button" id="btn-timer-plus" class="btn btn-ghost" aria-label="Sumar 30 segundos">+30s</button>
+          </div>
+          <button type="button" id="btn-timer-skip" class="btn btn-text">Saltar cronómetro</button>
+        </div>
+
+        <button type="button" id="btn-reveal-impostor" class="btn btn-primary btn-large">Revelar impostor(es)</button>
+      </div>
+    </section>
+
+    <!-- ============================= RESULTS ============================= -->
+    <section class="screen" data-screen="results" hidden>
+      <div class="results-wrap">
+        <h2>Resultados de la ronda</h2>
+
+        <p class="results-label">La palabra secreta era</p>
+        <p class="results-word" id="results-word">—</p>
+        <p class="results-category" id="results-category">—</p>
+
+        <p class="results-label">El/los impostor(es) eran</p>
+        <ul class="results-impostors" id="results-impostors"></ul>
+
+        <div class="results-actions">
+          <button type="button" id="btn-play-again" class="btn btn-primary btn-large">Jugar otra ronda</button>
+          <button type="button" id="btn-new-game" class="btn btn-secondary btn-large">Nueva partida</button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ======================= CONTENIDO INFORMATIVO ======================= -->
+
+  <section class="info-section" id="como-jugar">
+    <h2>Cómo jugar</h2>
+    <ol class="how-to-list">
+      <li><strong>Prepara la partida.</strong> Elige cuántos jugadores sois (3 a 15), cuántos impostores habrá y qué categoría de palabras queréis usar. Pulsa «Crear sala».</li>
+      <li><strong>Reparte los roles.</strong> El móvil se pasa de jugador en jugador. Cada persona mantiene pulsado el botón para ver su rol en privado, y confirma con «Ya lo vi, pasar al siguiente» antes de entregar el móvil.</li>
+      <li><strong>Objetivo de la tripulación.</strong> Los jugadores que conocen la palabra secreta deben dar pistas sutiles sobre ella (sin decirla nunca) para demostrar que la conocen, y así descubrir quién no la conoce: el impostor.</li>
+      <li><strong>Objetivo del impostor.</strong> El impostor no conoce la palabra. Debe escuchar las pistas de los demás, improvisar las suyas propias y pasar desapercibido sin que le pillen.</li>
+      <li><strong>Debate.</strong> Cuando todos han visto su rol, empieza el turno de hablar. Hay un cronómetro opcional (ajustable, con pausa) para poner límite a la charla.</li>
+      <li><strong>Votación y revelación.</strong> El grupo decide en voz alta o a mano alzada quién cree que es el impostor. Pulsad «Revelar impostor(es)» para descubrir si acertasteis y cuál era la palabra secreta.</li>
+    </ol>
+  </section>
+
+  <section class="info-section" id="categorias">
+    <h2>Categorías disponibles</h2>
+    <p>Más de 300 palabras repartidas en 7 categorías, para que las rondas nunca se repitan.</p>
+    <ul class="categories-preview" id="categories-preview">
+      <li><strong>Comida</strong> — platos, ingredientes y sabores de siempre.</li>
+      <li><strong>Animales</strong> — de la granja a la selva.</li>
+      <li><strong>Profesiones</strong> — oficios y trabajos de toda la vida.</li>
+      <li><strong>Lugares</strong> — sitios que todo el mundo conoce.</li>
+      <li><strong>Objetos Cotidianos</strong> — cosas que usas cada día.</li>
+      <li><strong>Deportes</strong> — disciplinas de todo tipo.</li>
+      <li><strong>Superpoderes</strong> — habilidades imposibles para soñar despierto.</li>
+      <li><strong>Mezcla de todas</strong> — una palabra al azar de cualquier categoría, para no saber nunca qué esperar.</li>
+    </ul>
+  </section>
+
+  <section class="info-section" id="faq">
+    <h2>Preguntas frecuentes</h2>
+
+    <div class="faq-item">
+      <h3>¿Necesito descargar una app?</h3>
+      <p>No, funciona directamente en el navegador de tu móvil, no requiere descargar ni instalar nada.</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>¿Cuántos jugadores necesito?</h3>
+      <p>Puedes jugar con un mínimo de 3 y un máximo de 15 jugadores.</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>¿Es gratis?</h3>
+      <p>Sí, el juego es completamente gratuito y no tiene anuncios ni compras dentro de la app.</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>¿Funciona sin internet?</h3>
+      <p>Una vez cargada la página, el juego funciona sin conexión porque todo ocurre en tu propio móvil.</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>¿Necesitamos varios móviles?</h3>
+      <p>No, con un solo móvil compartido entre todos los jugadores es suficiente; se va pasando de mano en mano.</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>¿Se guardan las palabras secretas o los roles?</h3>
+      <p>No, cada ronda se genera en el momento y se borra de la memoria al terminar o si recargas la página, así nadie puede hacer trampas.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <p>¿Quién es el Impostor? es un juego de fiesta original de palabras, no afiliado a ninguna marca comercial.</p>
+  <p>Hecho para jugar en cualquier móvil, sin cuentas ni descargas.</p>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
