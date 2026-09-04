@@ -242,6 +242,7 @@ const el = {};
 
 function cacheDom() {
   el.screens = document.querySelectorAll('.screen');
+  el.siteHeader = document.querySelector('.site-header');
 
   // Setup
   el.playerCountValue = document.getElementById('player-count-value');
@@ -284,6 +285,12 @@ function showScreen(name) {
   el.screens.forEach((section) => {
     section.hidden = section.dataset.screen !== name;
   });
+  // La cabecera con el título/tagline solo aporta en la pantalla de ajustes;
+  // en reveal/discussion/results ocupa espacio valioso en móviles pequeños
+  // y rompe la sensación de pantalla completa, así que se oculta.
+  if (el.siteHeader) {
+    el.siteHeader.hidden = name !== 'setup';
+  }
   window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
 }
 
@@ -394,10 +401,10 @@ function endRevealHold() {
   el.roleContent.textContent = '';
   el.roleCategoryLabel.textContent = '';
   el.holdBtn.classList.remove('is-held');
-  if (round && !round.hasRevealedCurrent) {
+  // Siempre volvemos a mostrar el aviso: mantener pulsado de nuevo debe
+  // permitir repasar el rol en cualquier momento, no solo la primera vez.
+  if (round) {
     el.holdPrompt.hidden = false;
-  } else if (round) {
-    el.holdPrompt.hidden = true;
   }
 }
 

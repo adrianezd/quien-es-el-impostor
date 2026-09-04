@@ -20,9 +20,11 @@
   --text: #f5f3fb;
   --text-muted: #a89fc4;
 
-  --radius-lg: 20px;
-  --radius-md: 14px;
-  --radius-sm: 10px;
+  --radius-lg: 16px;
+  --radius-md: 10px;
+  --radius-sm: 8px;
+
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
 
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -36,6 +38,14 @@
   box-sizing: border-box;
 }
 
+/* Elementos con [hidden] deben desaparecer SIEMPRE, incluso si tienen su
+   propio "display" (p. ej. .screen, .role-panel usan display:flex). Sin esta
+   regla, el display:flex del autor gana al [hidden] del user-agent y el
+   elemento se queda visible aunque tenga el atributo hidden. */
+[hidden] {
+  display: none !important;
+}
+
 html, body {
   height: 100%;
   overscroll-behavior: none;
@@ -43,7 +53,7 @@ html, body {
 
 body {
   margin: 0;
-  background: radial-gradient(circle at 50% 0%, #201933 0%, var(--bg) 55%);
+  background: var(--bg);
   color: var(--text);
   font-family: 'Space Grotesk', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   line-height: 1.5;
@@ -88,12 +98,19 @@ a {
   padding: 2rem 1.25rem 1rem;
 }
 
+.site-kicker {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 0.6em;
+}
+
 .site-header h1 {
-  font-size: clamp(1.75rem, 6vw, 2.5rem);
-  background: linear-gradient(135deg, #fff, var(--accent) 120%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  font-size: clamp(1.6rem, 6vw, 2.25rem);
+  color: var(--text);
 }
 
 .tagline {
@@ -143,9 +160,12 @@ a {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+  background: var(--accent);
   color: #fff;
-  box-shadow: 0 8px 24px -8px rgba(139, 92, 246, 0.6);
+}
+
+.btn-primary:active {
+  background: var(--accent-dark);
 }
 
 .btn-secondary {
@@ -255,7 +275,8 @@ a {
 }
 
 .stepper-value {
-  font-size: 2rem;
+  font-family: var(--font-mono);
+  font-size: 1.85rem;
   font-weight: 700;
   min-width: 3ch;
   text-align: center;
@@ -285,8 +306,8 @@ a {
 
 .category-pill.is-selected {
   border-color: var(--accent);
+  border-left-width: 3px;
   background: var(--accent-soft);
-  box-shadow: 0 0 0 1px var(--accent) inset;
 }
 
 .category-pill-name {
@@ -325,9 +346,15 @@ a {
 }
 
 .reveal-warning {
-  color: var(--danger);
-  font-weight: 600;
-  font-size: 0.95rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-left: 2px solid var(--danger);
+  padding: 0.3rem 0 0.3rem 0.6rem;
+  text-align: left;
   margin: 0 0 0.5rem;
 }
 
@@ -382,8 +409,9 @@ a {
 
 .role-category-label {
   display: block;
+  font-family: var(--font-mono);
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -392,7 +420,8 @@ a {
 .role-content {
   display: block;
   margin: 0;
-  font-size: clamp(1.6rem, 9vw, 2.6rem);
+  font-family: var(--font-mono);
+  font-size: clamp(1.5rem, 8.5vw, 2.4rem);
   font-weight: 700;
   word-break: break-word;
 }
@@ -435,6 +464,7 @@ a {
 }
 
 .timer-display {
+  font-family: var(--font-mono);
   font-size: clamp(2.5rem, 12vw, 3.5rem);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -476,6 +506,7 @@ a {
 }
 
 .results-word {
+  font-family: var(--font-mono);
   font-size: clamp(1.75rem, 8vw, 2.5rem);
   font-weight: 700;
   color: var(--accent);
@@ -545,18 +576,17 @@ a {
   list-style: none;
   padding: 0;
   margin: 0;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.6rem;
 }
 
 .categories-preview li {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 0.75rem 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border);
   color: var(--text-muted);
   font-size: 0.9rem;
+}
+
+.categories-preview li:last-child {
+  border-bottom: none;
 }
 
 .categories-preview strong {
@@ -577,12 +607,6 @@ a {
 }
 
 /* --------------------------------- Responsive tweaks ------------------------------ */
-
-@media (min-width: 480px) {
-  .categories-preview {
-    grid-template-columns: 1fr 1fr;
-  }
-}
 
 @media (min-width: 700px) {
   #game-app {
