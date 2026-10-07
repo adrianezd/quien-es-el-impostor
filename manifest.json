@@ -1,13 +1,13 @@
 {
   "name": "¿Quién es el Impostor? - Juego de fiesta",
   "short_name": "Impostor",
-  "description": "Juego de fiesta de palabra secreta para grupos, en un solo móvil compartido.",
+  "description": "Juego de fiesta de palabra secreta para grupos, en un solo móvil compartido. 4 modos, +650 palabras.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "orientation": "any",
-  "background_color": "#0f0c18",
-  "theme_color": "#14101f",
+  "orientation": "portrait",
+  "background_color": "#0c0915",
+  "theme_color": "#0c0915",
   "lang": "es",
   "icons": [
     {
@@ -22,5 +22,9 @@
       "type": "image/png",
       "purpose": "any"
     }
+  ],
+  "categories": [
+    "games",
+    "entertainment"
   ]
 }
