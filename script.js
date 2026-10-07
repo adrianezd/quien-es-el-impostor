@@ -3,156 +3,61 @@
 /* =========================================================================
    ¿Quién es el Impostor? — lógica del juego
    Todo el estado de la ronda (palabra secreta, roles) vive únicamente en
-   memoria (variables JS). Nunca se guarda en localStorage, así que un
-   simple refresco de página lo borra por completo ("autodestrucción").
-   Solo los ajustes no secretos (nº de jugadores, categoría...) se
-   recuerdan entre partidas.
+   memoria. Nunca se guarda en localStorage, así que recargar la página lo
+   borra por completo. Solo los ajustes, los nombres y tus palabras
+   personalizadas (nada secreto) se recuerdan entre partidas.
    ========================================================================= */
-
-/* ---------------------------- Banco de palabras --------------------------- */
-
-const CATEGORIES = {
-  comida: {
-    label: 'Comida',
-    words: [
-      'pizza', 'hamburguesa', 'sushi', 'tacos', 'paella', 'ensalada', 'sopa',
-      'pasta', 'arroz', 'pan', 'queso', 'jamón', 'chocolate', 'helado',
-      'tarta', 'galleta', 'huevo', 'tortilla', 'croquetas', 'lentejas',
-      'garbanzos', 'pescado', 'pollo', 'carne', 'salchicha', 'patatas fritas',
-      'palomitas', 'sandía', 'manzana', 'plátano', 'naranja', 'fresa', 'uva',
-      'piña', 'mango', 'aguacate', 'tomate', 'lechuga', 'zanahoria',
-      'cebolla', 'pepino', 'calabacín', 'brócoli', 'espinacas', 'miel',
-      'mermelada', 'yogur', 'churros', 'empanada', 'gazpacho', 'flan'
-    ]
-  },
-  animales: {
-    label: 'Animales',
-    words: [
-      'perro', 'gato', 'elefante', 'león', 'tigre', 'jirafa', 'mono', 'oso',
-      'lobo', 'zorro', 'conejo', 'caballo', 'vaca', 'cerdo', 'oveja', 'cabra',
-      'gallina', 'pato', 'ganso', 'pavo', 'águila', 'búho', 'loro',
-      'pingüino', 'delfín', 'ballena', 'tiburón', 'pulpo', 'cangrejo',
-      'tortuga', 'serpiente', 'lagarto', 'rana', 'mariposa', 'abeja',
-      'hormiga', 'araña', 'ratón', 'ardilla', 'murciélago', 'canguro',
-      'koala', 'panda', 'cebra', 'hipopótamo', 'rinoceronte', 'cocodrilo',
-      'camello', 'búfalo', 'erizo', 'foca', 'nutria', 'mapache', 'jabalí',
-      'ciervo', 'gaviota', 'cisne', 'hiena', 'guepardo'
-    ]
-  },
-  profesiones: {
-    label: 'Profesiones',
-    words: [
-      'médico', 'enfermero', 'profesor', 'bombero', 'policía', 'cocinero',
-      'camarero', 'panadero', 'carpintero', 'electricista', 'fontanero',
-      'mecánico', 'abogado', 'juez', 'arquitecto', 'ingeniero', 'científico',
-      'farmacéutico', 'veterinario', 'dentista', 'peluquero', 'pintor',
-      'músico', 'actor', 'cantante', 'escritor', 'periodista', 'fotógrafo',
-      'piloto', 'conductor', 'taxista', 'agricultor', 'pescador',
-      'jardinero', 'albañil', 'sastre', 'zapatero', 'guía turístico',
-      'guardia de seguridad', 'recepcionista', 'contable', 'banquero',
-      'vendedor', 'cajero', 'repartidor', 'limpiador', 'entrenador',
-      'árbitro', 'astronauta', 'buceador', 'minero', 'soldador', 'costurera'
-    ]
-  },
-  lugares: {
-    label: 'Lugares',
-    words: [
-      'playa', 'montaña', 'bosque', 'desierto', 'ciudad', 'pueblo',
-      'aeropuerto', 'estación de tren', 'hospital', 'escuela', 'universidad',
-      'biblioteca', 'museo', 'cine', 'teatro', 'parque', 'zoológico',
-      'acuario', 'restaurante', 'cafetería', 'supermercado', 'mercado',
-      'centro comercial', 'gimnasio', 'piscina', 'estadio', 'iglesia',
-      'castillo', 'granja', 'isla', 'río', 'lago', 'cascada', 'cueva',
-      'volcán', 'jungla', 'sabana', 'glaciar', 'puerto', 'faro', 'puente',
-      'túnel', 'parque de atracciones', 'hotel', 'camping', 'oficina',
-      'fábrica', 'banco', 'farmacia', 'gasolinera'
-    ]
-  },
-  objetos: {
-    label: 'Objetos Cotidianos',
-    words: [
-      'teléfono', 'mochila', 'paraguas', 'reloj', 'gafas', 'cartera',
-      'llaves', 'espejo', 'cepillo de dientes', 'toalla', 'almohada',
-      'manta', 'silla', 'mesa', 'lámpara', 'taza', 'plato', 'tenedor',
-      'cuchara', 'cuchillo', 'tijeras', 'martillo', 'destornillador',
-      'escoba', 'cubo', 'esponja', 'jabón', 'champú', 'peine', 'secador',
-      'plancha', 'aspiradora', 'lavadora', 'nevera', 'horno', 'microondas',
-      'televisor', 'mando a distancia', 'cargador', 'auriculares',
-      'ordenador', 'teclado', 'impresora', 'libreta', 'bolígrafo', 'lápiz',
-      'goma de borrar', 'sobre', 'sello', 'maleta'
-    ]
-  },
-  deportes: {
-    label: 'Deportes',
-    words: [
-      'fútbol', 'baloncesto', 'tenis', 'voleibol', 'natación', 'atletismo',
-      'ciclismo', 'boxeo', 'judo', 'kárate', 'esgrima', 'golf', 'béisbol',
-      'rugby', 'balonmano', 'hockey', 'patinaje', 'esquí', 'snowboard',
-      'surf', 'remo', 'vela', 'escalada', 'senderismo', 'gimnasia',
-      'halterofilia', 'bádminton', 'squash', 'billar', 'bolos', 'ajedrez',
-      'tiro con arco', 'equitación', 'triatlón', 'maratón', 'buceo',
-      'kayak', 'pesca deportiva', 'parkour', 'monopatín', 'motociclismo',
-      'automovilismo', 'waterpolo', 'softbol', 'curling'
-    ]
-  },
-  superpoderes: {
-    label: 'Superpoderes',
-    words: [
-      'volar', 'invisibilidad', 'superfuerza', 'teletransportación',
-      'telepatía', 'telequinesis', 'supervelocidad', 'control del fuego',
-      'control del agua', 'control del hielo', 'control del rayo',
-      'curación instantánea', 'visión de rayos X', 'viajar en el tiempo',
-      'leer mentes', 'controlar mentes', 'invulnerabilidad', 'regeneración',
-      'control del clima', 'respirar bajo el agua', 'hablar con animales',
-      'transformación', 'duplicación', 'encogimiento', 'gigantismo',
-      'absorción de energía', 'campo de fuerza', 'control de plantas',
-      'control de metales', 'inmortalidad', 'visión nocturna',
-      'súper oído', 'control de sombras', 'viaje interdimensional',
-      'control del sonido', 'control de la gravedad', 'magnetismo',
-      'precognición', 'suerte extrema', 'camuflaje', 'exoesqueleto mental',
-      'control de la electricidad', 'súper salto', 'aliento congelante'
-    ]
-  }
-};
-
-const CATEGORY_KEYS = Object.keys(CATEGORIES);
-const MEZCLA_KEY = 'mezcla';
 
 /* ------------------------------- Constantes ------------------------------- */
 
 const MIN_PLAYERS = 3;
 const MAX_PLAYERS = 15;
-const DEFAULT_TIMER_SECONDS = 180; // 3 minutos
-const MIN_TIMER_SECONDS = 0;
-const MAX_TIMER_SECONDS = 3600;
+const TIMER_OPTIONS = [0, 1, 2, 3, 4, 5, 6, 8, 10]; // minutos (0 = sin cronómetro)
 const TIMER_STEP = 30;
-const SETTINGS_KEY = 'impostor-settings-v1';
+const SETTINGS_KEY = 'impostor-settings-v2';
+const LEGACY_SETTINGS_KEY = 'impostor-settings-v1';
+const CUSTOM_KEY = 'impostor-custom-words-v1';
+const CUSTOM_CAT = 'custom';
+const RECENT_LIMIT = 80;
+
+const MODES = [
+  { key: 'clasico', emoji: '🕵️', label: 'Clásico', sub: 'El impostor no sabe la palabra' },
+  { key: 'pista', emoji: '💡', label: 'Con pista', sub: 'El impostor recibe una pista relacionada' },
+  { key: 'infiltrado', emoji: '🥸', label: 'Infiltrado', sub: 'Palabra parecida… y no sabe que es el impostor' },
+  { key: 'caos', emoji: '🌀', label: 'Caos', sub: '¿Uno, varios, ninguno, todos? Nadie lo sabe' }
+];
+
+const MODE_HELP = {
+  clasico: 'Por turnos, cada uno dice <strong>una palabra relacionada</strong> con la secreta, sin decirla. El impostor tiene que disimular… y adivinarla. Haced 2 o 3 vueltas.',
+  pista: 'Por turnos, cada uno dice <strong>una palabra relacionada</strong> con la secreta. Ojo: el impostor tiene una pista, así que no os lo pondrá fácil.',
+  infiltrado: 'Por turnos, cada uno dice <strong>una palabra relacionada</strong> con la suya. Alguien tiene una palabra parecida pero distinta… y puede que seas tú.',
+  caos: 'Por turnos, cada uno dice <strong>una palabra relacionada</strong> con la secreta. ¿Hay impostor? ¿Hay varios? ¿Sois todos? Desconfiad de todo.'
+};
 
 /* --------------------------------- Estado ---------------------------------- */
 
-/** Ajustes no secretos, persistidos en localStorage. */
 let settings = {
+  mode: 'clasico',
   playerCount: 5,
   impostorCount: 1,
-  categoryKey: MEZCLA_KEY
+  categories: CATEGORY_KEYS.slice(),
+  timerMinutes: 3,
+  showCategory: true,
+  secretVote: false
 };
 
-/** true si el usuario ha tocado manualmente el nº de impostores en esta sesión. */
 let impostorManuallySet = false;
+let customText = '';
+let custom = { words: [], pairs: [] };
 
-/** Estado de la ronda actual, SOLO en memoria. null cuando no hay ronda activa. */
+/** Estado de la ronda actual, SOLO en memoria. null cuando no hay ronda. */
 let round = null;
-
-/** Evita que doble-clicks/doble-taps desincronicen el avance de jugador. */
 let isAdvancing = false;
-
-let lastWord = null; // evita repetir la misma palabra dos rondas seguidas
+const recent = [];
+const scores = Kit.createScores();
+let timer = null;
 
 /* --------------------------------- Utilidades ------------------------------- */
-
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value));
-}
 
 function maxImpostorsFor(playerCount) {
   // Los impostores deben ser siempre MENOS de la mitad de los jugadores.
@@ -160,80 +65,118 @@ function maxImpostorsFor(playerCount) {
 }
 
 function suggestedImpostorCount(playerCount) {
-  const max = maxImpostorsFor(playerCount);
-  return playerCount >= 7 ? Math.min(2, max) : 1;
+  return playerCount >= 7 ? Math.min(2, maxImpostorsFor(playerCount)) : 1;
 }
 
-/** Fisher-Yates shuffle, no muta el array original. */
-function shuffled(array) {
-  const copy = array.slice();
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
+function modeInfo(key) {
+  return MODES.find((m) => m.key === key) || MODES[0];
+}
+
+function parseCustom(text) {
+  const words = [];
+  const pairs = [];
+  text.split(/[\n,;]+/).map((s) => s.trim()).filter(Boolean).forEach((item) => {
+    const clean = item.replace(/\|/g, ' ').slice(0, 40);
+    if (clean.includes('/')) {
+      const [a, b] = clean.split('/').map((s) => s.trim());
+      if (a && b) pairs.push([a, b]);
+      if (a) words.push(`${a}|`);
+    } else {
+      words.push(`${clean}|`);
+    }
+  });
+  return { words, pairs };
+}
+
+function getCategory(key) {
+  if (key === CUSTOM_CAT) {
+    return { label: 'Tus palabras', emoji: '✍️', words: custom.words, pairs: custom.pairs };
   }
-  return copy;
+  return CATEGORIES[key];
 }
 
-function pickImpostorIndices(playerCount, impostorCount) {
-  const indices = Array.from({ length: playerCount }, (_, i) => i);
-  const chosen = shuffled(indices).slice(0, impostorCount);
-  return new Set(chosen);
+function availableCategoryKeys() {
+  return custom.words.length ? CATEGORY_KEYS.concat(CUSTOM_CAT) : CATEGORY_KEYS.slice();
 }
 
-function pickWordForCategory(categoryKey) {
-  let realKey = categoryKey;
-  if (categoryKey === MEZCLA_KEY) {
-    realKey = CATEGORY_KEYS[Math.floor(Math.random() * CATEGORY_KEYS.length)];
+function itemsFor(key, mode) {
+  const cat = getCategory(key);
+  if (!cat) return [];
+  return mode === 'infiltrado' ? cat.pairs : cat.words;
+}
+
+/** Palabras (o parejas) candidatas según modo y categorías elegidas. */
+function buildPool() {
+  const pool = [];
+  settings.categories.forEach((key) => {
+    const cat = getCategory(key);
+    if (!cat) return;
+    if (settings.mode === 'infiltrado') {
+      cat.pairs.forEach(([a, b]) => pool.push({ id: `${a}/${b}`, a, b, key }));
+    } else {
+      cat.words.forEach((entry) => {
+        const [word, hint = ''] = entry.split('|');
+        pool.push({ id: word, word, hint, key });
+      });
+    }
+  });
+  return pool;
+}
+
+function pickFromPool(pool) {
+  let candidates = pool.filter((item) => !recent.includes(item.id));
+  if (!candidates.length) {
+    recent.length = 0;
+    candidates = pool;
   }
-  const list = CATEGORIES[realKey].words;
-  let candidates = list;
-  if (list.length > 1 && lastWord !== null) {
-    const withoutLast = list.filter((w) => w !== lastWord);
-    if (withoutLast.length > 0) candidates = withoutLast;
-  }
-  const word = candidates[Math.floor(Math.random() * candidates.length)];
-  return { word, categoryLabel: CATEGORIES[realKey].label };
+  const item = Kit.pick(candidates);
+  recent.push(item.id);
+  if (recent.length > RECENT_LIMIT) recent.shift();
+  return item;
 }
 
-function formatTime(totalSeconds) {
-  const m = Math.floor(totalSeconds / 60);
-  const s = totalSeconds % 60;
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+function chaosImpostorCount(n) {
+  const r = Math.random();
+  if (r < 0.12) return 0;
+  if (r < 0.2) return n;
+  return 1 + Math.floor(Math.random() * Math.max(1, Math.floor(n / 2)));
 }
 
 /* ------------------------------ Persistencia -------------------------------- */
 
 function loadSettings() {
-  try {
-    const raw = localStorage.getItem(SETTINGS_KEY);
-    if (!raw) return;
-    const parsed = JSON.parse(raw);
-    if (typeof parsed.playerCount === 'number') {
-      settings.playerCount = clamp(Math.round(parsed.playerCount), MIN_PLAYERS, MAX_PLAYERS);
-    }
-    if (typeof parsed.categoryKey === 'string' &&
-        (parsed.categoryKey === MEZCLA_KEY || CATEGORY_KEYS.includes(parsed.categoryKey))) {
-      settings.categoryKey = parsed.categoryKey;
-    }
-    const max = maxImpostorsFor(settings.playerCount);
-    if (typeof parsed.impostorCount === 'number') {
-      settings.impostorCount = clamp(Math.round(parsed.impostorCount), 1, max);
-      impostorManuallySet = true;
-    } else {
-      settings.impostorCount = suggestedImpostorCount(settings.playerCount);
-    }
-  } catch (err) {
-    // localStorage inaccesible o dato corrupto: seguimos con los valores por defecto.
-    console.warn('No se pudieron cargar los ajustes guardados:', err);
+  const saved = Kit.load(SETTINGS_KEY, null);
+  const legacy = saved ? null : Kit.load(LEGACY_SETTINGS_KEY, null);
+  const parsed = saved || legacy || {};
+
+  if (MODES.some((m) => m.key === parsed.mode)) settings.mode = parsed.mode;
+  if (typeof parsed.playerCount === 'number') {
+    settings.playerCount = Kit.clamp(Math.round(parsed.playerCount), MIN_PLAYERS, MAX_PLAYERS);
   }
+  const max = maxImpostorsFor(settings.playerCount);
+  if (typeof parsed.impostorCount === 'number') {
+    settings.impostorCount = Kit.clamp(Math.round(parsed.impostorCount), 1, max);
+    impostorManuallySet = true;
+  } else {
+    settings.impostorCount = suggestedImpostorCount(settings.playerCount);
+  }
+  if (Array.isArray(parsed.categories)) {
+    const valid = parsed.categories.filter((k) => k === CUSTOM_CAT || CATEGORY_KEYS.includes(k));
+    if (valid.length) settings.categories = valid;
+  } else if (legacy && CATEGORY_KEYS.includes(legacy.categoryKey)) {
+    settings.categories = [legacy.categoryKey];
+  }
+  if (TIMER_OPTIONS.includes(parsed.timerMinutes)) settings.timerMinutes = parsed.timerMinutes;
+  if (typeof parsed.showCategory === 'boolean') settings.showCategory = parsed.showCategory;
+  if (typeof parsed.secretVote === 'boolean') settings.secretVote = parsed.secretVote;
+
+  const savedCustom = Kit.load(CUSTOM_KEY, '');
+  customText = typeof savedCustom === 'string' ? savedCustom : '';
+  custom = parseCustom(customText);
 }
 
 function saveSettings() {
-  try {
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-  } catch (err) {
-    console.warn('No se pudieron guardar los ajustes:', err);
-  }
+  Kit.save(SETTINGS_KEY, settings);
 }
 
 /* ---------------------------------- DOM -------------------------------------- */
@@ -241,341 +184,576 @@ function saveSettings() {
 const el = {};
 
 function cacheDom() {
-  el.screens = document.querySelectorAll('.screen');
-  el.siteHeader = document.querySelector('.site-header');
-
-  // Setup
-  el.playerCountValue = document.getElementById('player-count-value');
-  el.playerMinus = document.getElementById('btn-player-minus');
-  el.playerPlus = document.getElementById('btn-player-plus');
-  el.impostorCountValue = document.getElementById('impostor-count-value');
-  el.impostorMinus = document.getElementById('btn-impostor-minus');
-  el.impostorPlus = document.getElementById('btn-impostor-plus');
-  el.impostorHint = document.getElementById('impostor-hint');
-  el.categoryOptions = document.getElementById('category-options');
-  el.btnStart = document.getElementById('btn-start-game');
-
-  // Reveal
-  el.revealPlayerLabel = document.getElementById('reveal-player-label');
-  el.revealProgress = document.getElementById('reveal-progress');
-  el.holdBtn = document.getElementById('hold-reveal-btn');
-  el.holdPrompt = document.getElementById('hold-prompt');
-  el.rolePanel = document.getElementById('role-panel');
-  el.roleCategoryLabel = document.getElementById('role-category-label');
-  el.roleContent = document.getElementById('role-content');
-  el.btnNextPlayer = document.getElementById('btn-next-player');
-
-  // Discussion
-  el.timerDisplay = document.getElementById('timer-display');
-  el.timerMinus = document.getElementById('btn-timer-minus');
-  el.timerPlus = document.getElementById('btn-timer-plus');
-  el.timerToggle = document.getElementById('btn-timer-toggle');
-  el.timerSkip = document.getElementById('btn-timer-skip');
-  el.btnRevealImpostor = document.getElementById('btn-reveal-impostor');
-
-  // Results
-  el.resultsWord = document.getElementById('results-word');
-  el.resultsCategory = document.getElementById('results-category');
-  el.resultsImpostors = document.getElementById('results-impostors');
-  el.btnPlayAgain = document.getElementById('btn-play-again');
-  el.btnNewGame = document.getElementById('btn-new-game');
-}
-
-function showScreen(name) {
-  el.screens.forEach((section) => {
-    section.hidden = section.dataset.screen !== name;
+  [
+    'mode-options', 'player-count-value', 'btn-player-minus', 'btn-player-plus',
+    'impostor-row', 'impostor-count-value', 'btn-impostor-minus', 'btn-impostor-plus', 'impostor-hint',
+    'chaos-hint', 'names-grid', 'btn-shuffle-names', 'category-options', 'category-summary',
+    'category-warning', 'btn-cat-all', 'btn-cat-none', 'custom-words', 'time-value', 'timer-hint',
+    'btn-time-minus', 'btn-time-plus', 'show-category-row', 'opt-show-category', 'opt-secret-vote',
+    'opt-sound', 'opt-vibrate', 'setup-scoreline', 'setup-score-text', 'btn-reset-scores', 'btn-start-game',
+    'game-bar-title', 'btn-exit',
+    'reveal-dots', 'reveal-player', 'hold-reveal-btn', 'role-panel', 'role-category-label', 'role-emoji',
+    'role-content', 'role-extra', 'btn-next-player',
+    'starter-name', 'starter-direction', 'discussion-help', 'timer-block', 'timer-display', 'timer-ring',
+    'btn-timer-minus', 'btn-timer-toggle', 'btn-timer-plus', 'btn-go-vote', 'btn-reveal-direct',
+    'vote-title', 'vote-area',
+    'verdict', 'verdict-emoji', 'verdict-title', 'verdict-text', 'guess-box', 'guess-text',
+    'btn-guess-yes', 'btn-guess-no', 'reveal-box', 'results-word-label', 'results-word', 'results-category',
+    'results-alt-wrap', 'results-alt-word', 'results-impostors-label', 'results-impostors', 'vote-summary',
+    'scoreboard-card', 'scoreboard', 'results-actions', 'btn-play-again', 'btn-new-game'
+  ].forEach((id) => {
+    el[id.replace(/-([a-z])/g, (_, c) => c.toUpperCase())] = document.getElementById(id);
   });
-  // La cabecera con el título/tagline solo aporta en la pantalla de ajustes;
-  // en reveal/discussion/results ocupa espacio valioso en móviles pequeños
-  // y rompe la sensación de pantalla completa, así que se oculta.
-  if (el.siteHeader) {
-    el.siteHeader.hidden = name !== 'setup';
-  }
-  window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
 }
 
 /* -------------------------------- Pantalla: Setup ----------------------------- */
 
-function renderCategoryOptions() {
-  el.categoryOptions.innerHTML = '';
-
-  const makePill = (key, label, count) => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'category-pill';
-    btn.dataset.key = key;
-    btn.setAttribute('role', 'radio');
-    btn.setAttribute('aria-checked', String(settings.categoryKey === key));
-    if (settings.categoryKey === key) btn.classList.add('is-selected');
-    btn.innerHTML = `<span class="category-pill-name">${label}</span>` +
-      (count ? `<span class="category-pill-count">${count} palabras</span>` : '<span class="category-pill-count">Todas las categorías</span>');
-    btn.addEventListener('click', () => {
-      settings.categoryKey = key;
-      renderCategoryOptions();
-    });
-    return btn;
-  };
-
-  el.categoryOptions.appendChild(makePill(MEZCLA_KEY, 'Mezcla de todas', null));
-  CATEGORY_KEYS.forEach((key) => {
-    el.categoryOptions.appendChild(makePill(key, CATEGORIES[key].label, CATEGORIES[key].words.length));
+function renderModes() {
+  Kit.renderOptions(el.modeOptions, MODES, {
+    className: 'mode-card',
+    isSelected: (key) => settings.mode === key,
+    onSelect: (key) => {
+      settings.mode = key;
+      saveSettings();
+      renderSetup();
+    }
   });
 }
 
-function renderSetup() {
-  el.playerCountValue.textContent = String(settings.playerCount);
-  el.playerMinus.disabled = settings.playerCount <= MIN_PLAYERS;
-  el.playerPlus.disabled = settings.playerCount >= MAX_PLAYERS;
+function renderCategories() {
+  const keys = availableCategoryKeys();
+  const infiltrado = settings.mode === 'infiltrado';
+  Kit.renderOptions(el.categoryOptions, keys.map((key) => {
+    const cat = getCategory(key);
+    const count = itemsFor(key, settings.mode).length;
+    return { key, emoji: cat.emoji, label: cat.label, sub: String(count), disabled: count === 0 };
+  }), {
+    multi: true,
+    isSelected: (key) => settings.categories.includes(key) && itemsFor(key, settings.mode).length > 0,
+    onSelect: (key) => {
+      settings.categories = settings.categories.includes(key)
+        ? settings.categories.filter((k) => k !== key)
+        : settings.categories.concat(key);
+      saveSettings();
+      renderSetup();
+    }
+  });
 
+  const pool = buildPool();
+  const unit = infiltrado ? 'parejas' : 'palabras';
+  el.categorySummary.textContent = `${pool.length} ${unit}`;
+  el.categoryWarning.hidden = pool.length > 0;
+  el.categoryWarning.textContent = infiltrado
+    ? 'Elige al menos una categoría con parejas para el modo Infiltrado.'
+    : 'Elige al menos una categoría.';
+  el.btnStartGame.disabled = pool.length === 0;
+}
+
+function renderSetup() {
+  renderModes();
+
+  el.playerCountValue.textContent = String(settings.playerCount);
+  el.btnPlayerMinus.disabled = settings.playerCount <= MIN_PLAYERS;
+  el.btnPlayerPlus.disabled = settings.playerCount >= MAX_PLAYERS;
+
+  const isChaos = settings.mode === 'caos';
   const max = maxImpostorsFor(settings.playerCount);
+  el.impostorRow.hidden = isChaos;
+  el.chaosHint.hidden = !isChaos;
   el.impostorCountValue.textContent = String(settings.impostorCount);
-  el.impostorMinus.disabled = settings.impostorCount <= 1;
-  el.impostorPlus.disabled = settings.impostorCount >= max;
+  el.btnImpostorMinus.disabled = settings.impostorCount <= 1;
+  el.btnImpostorPlus.disabled = settings.impostorCount >= max;
   el.impostorHint.textContent = `Máximo ${max} para ${settings.playerCount} jugadores`;
 
-  renderCategoryOptions();
+  Kit.renderNameInputs(el.namesGrid, settings.playerCount);
+  renderCategories();
+
+  const idx = TIMER_OPTIONS.indexOf(settings.timerMinutes);
+  el.timeValue.textContent = settings.timerMinutes ? `${settings.timerMinutes}′` : '—';
+  el.timerHint.textContent = settings.timerMinutes ? 'Con cronómetro' : 'Sin cronómetro';
+  el.btnTimeMinus.disabled = idx <= 0;
+  el.btnTimePlus.disabled = idx >= TIMER_OPTIONS.length - 1;
+
+  el.showCategoryRow.hidden = settings.mode === 'infiltrado';
+  el.optShowCategory.checked = settings.showCategory;
+  el.optSecretVote.checked = settings.secretVote;
+
+  el.setupScoreline.hidden = scores.rounds === 0;
+  el.setupScoreText.textContent = `🏆 Marcador: ${scores.rounds} ${scores.rounds === 1 ? 'ronda' : 'rondas'}`;
 }
 
 function changePlayerCount(delta) {
-  settings.playerCount = clamp(settings.playerCount + delta, MIN_PLAYERS, MAX_PLAYERS);
+  settings.playerCount = Kit.clamp(settings.playerCount + delta, MIN_PLAYERS, MAX_PLAYERS);
   const max = maxImpostorsFor(settings.playerCount);
-  if (!impostorManuallySet) {
-    settings.impostorCount = suggestedImpostorCount(settings.playerCount);
-  } else {
-    settings.impostorCount = clamp(settings.impostorCount, 1, max);
-  }
+  settings.impostorCount = impostorManuallySet
+    ? Kit.clamp(settings.impostorCount, 1, max)
+    : suggestedImpostorCount(settings.playerCount);
+  saveSettings();
   renderSetup();
 }
 
 function changeImpostorCount(delta) {
   const max = maxImpostorsFor(settings.playerCount);
-  settings.impostorCount = clamp(settings.impostorCount + delta, 1, max);
+  settings.impostorCount = Kit.clamp(settings.impostorCount + delta, 1, max);
   impostorManuallySet = true;
+  saveSettings();
   renderSetup();
 }
 
-/* -------------------------------- Pantalla: Reveal ----------------------------- */
-
-function renderRevealForCurrentPlayer() {
-  const playerNumber = round.currentIndex + 1;
-  el.revealPlayerLabel.textContent = `Jugador ${playerNumber}`;
-  el.revealProgress.textContent = `Jugador ${playerNumber} de ${settings.playerCount}`;
-
-  // Oculto por defecto: el contenido solo se revela mientras se mantiene pulsado.
-  el.rolePanel.hidden = true;
-  el.roleContent.className = '';
-  el.roleContent.textContent = '';
-  el.roleCategoryLabel.textContent = '';
-
-  round.hasRevealedCurrent = false;
-  el.btnNextPlayer.disabled = true;
-  el.holdBtn.classList.remove('is-held');
-  el.holdPrompt.hidden = false;
+function changeTimer(delta) {
+  const idx = Kit.clamp(TIMER_OPTIONS.indexOf(settings.timerMinutes) + delta, 0, TIMER_OPTIONS.length - 1);
+  settings.timerMinutes = TIMER_OPTIONS[idx];
+  saveSettings();
+  renderSetup();
 }
 
-function populateRoleContent() {
-  const isImpostor = round.impostorIndices.has(round.currentIndex);
-  el.roleCategoryLabel.textContent = `Categoría: ${round.categoryLabel}`;
-  if (isImpostor) {
-    el.roleContent.textContent = 'ERES EL IMPOSTOR';
-    el.roleContent.className = 'role-impostor';
+/* -------------------------------- Pantalla: Reparto ----------------------------- */
+
+function renderRevealForCurrentPlayer() {
+  const i = round.current;
+  el.revealPlayer.textContent = round.names[i];
+  el.revealDots.innerHTML = round.names
+    .map((_, idx) => `<li class="${idx < i ? 'is-done' : idx === i ? 'is-current' : ''}"></li>`)
+    .join('');
+  clearRole();
+  el.btnNextPlayer.disabled = true;
+  el.btnNextPlayer.textContent = i === round.names.length - 1 ? 'Ya lo vi, ¡a debatir!' : 'Ya lo vi, pasar al siguiente';
+}
+
+function clearRole() {
+  el.holdRevealBtn.classList.remove('is-held');
+  el.rolePanel.classList.remove('is-alert');
+  el.roleCategoryLabel.textContent = '';
+  el.roleEmoji.textContent = '';
+  el.roleContent.textContent = '';
+  el.roleContent.className = 'role-content';
+  el.roleExtra.innerHTML = '';
+}
+
+function populateRole() {
+  const i = round.current;
+  const isImpostor = round.impostors.has(i);
+  const catText = `Categoría: ${round.catLabel}`;
+
+  if (round.mode === 'infiltrado') {
+    el.roleCategoryLabel.textContent = catText;
+    el.roleEmoji.textContent = round.catEmoji;
+    el.roleContent.textContent = isImpostor ? round.altWord : round.word;
+    el.roleExtra.textContent = 'Da pistas sin decir tu palabra';
+    return;
+  }
+
+  if (!isImpostor) {
+    el.roleCategoryLabel.textContent = catText;
+    el.roleEmoji.textContent = round.catEmoji;
+    el.roleContent.textContent = round.word;
+    el.roleExtra.textContent = round.mode === 'caos' ? '¿Habrá impostor? 🌀' : 'Da pistas sin decirla';
+    return;
+  }
+
+  el.rolePanel.classList.add('is-alert');
+  el.roleCategoryLabel.textContent = settings.showCategory ? catText : 'Categoría secreta';
+  el.roleEmoji.textContent = '🕵️';
+  el.roleContent.textContent = 'Eres el impostor';
+  el.roleContent.classList.add('is-impostor');
+  if (round.mode === 'pista') {
+    el.roleExtra.innerHTML = round.hint
+      ? `Pista: <strong>${Kit.esc(round.hint)}</strong>`
+      : 'Esta palabra no tiene pista: ¡improvisa!';
+  } else if (round.mode === 'caos') {
+    el.roleExtra.textContent = '¿Estarás solo? 🌀';
   } else {
-    el.roleContent.textContent = round.secretWord;
-    el.roleContent.className = 'role-word';
+    el.roleExtra.textContent = 'Disimula y descubre la palabra';
   }
 }
 
-function startRevealHold(evt) {
-  if (evt) evt.preventDefault();
+function startRevealHold() {
   if (!round) return;
-  populateRoleContent();
-  el.rolePanel.hidden = false;
-  el.holdPrompt.hidden = true;
-  el.holdBtn.classList.add('is-held');
-  round.hasRevealedCurrent = true;
+  populateRole();
+  el.holdRevealBtn.classList.add('is-held');
   el.btnNextPlayer.disabled = false;
+  Kit.buzz(20);
 }
 
 function endRevealHold() {
-  el.rolePanel.hidden = true;
-  el.roleContent.textContent = '';
-  el.roleCategoryLabel.textContent = '';
-  el.holdBtn.classList.remove('is-held');
-  // Siempre volvemos a mostrar el aviso: mantener pulsado de nuevo debe
-  // permitir repasar el rol en cualquier momento, no solo la primera vez.
-  if (round) {
-    el.holdPrompt.hidden = false;
-  }
+  el.holdRevealBtn.classList.remove('is-held');
+  // Se vacía tras la animación de giro para no mostrar nada al soltar.
+  setTimeout(() => {
+    if (!el.holdRevealBtn.classList.contains('is-held')) clearRole();
+  }, 300);
 }
 
 function goToNextPlayer() {
-  if (isAdvancing) return;
-  if (!round || el.btnNextPlayer.disabled) return;
+  if (isAdvancing || !round || el.btnNextPlayer.disabled) return;
   isAdvancing = true;
-  el.btnNextPlayer.disabled = true;
-
-  round.currentIndex += 1;
-  if (round.currentIndex >= settings.playerCount) {
+  clearRole();
+  round.current += 1;
+  if (round.current >= round.names.length) {
     startDiscussionPhase();
   } else {
     renderRevealForCurrentPlayer();
+    Kit.sfx.tap();
   }
   isAdvancing = false;
 }
 
-/* ------------------------------ Pantalla: Discusión ----------------------------- */
-
-function clearRoundTimer() {
-  if (round && round.timerIntervalId !== null) {
-    clearInterval(round.timerIntervalId);
-    round.timerIntervalId = null;
-  }
-}
-
-function updateTimerDisplay() {
-  el.timerDisplay.textContent = formatTime(round.timerSeconds);
-  el.timerDisplay.classList.toggle('is-finished', round.timerSeconds === 0);
-}
-
-function updateTimerToggleLabel() {
-  el.timerToggle.textContent = round.timerRunning ? 'Pausar' : 'Reanudar';
-}
-
-function tickTimer() {
-  if (!round || !round.timerRunning) return;
-  if (round.timerSeconds > 0) {
-    round.timerSeconds -= 1;
-    updateTimerDisplay();
-    if (round.timerSeconds === 0) {
-      round.timerRunning = false;
-      updateTimerToggleLabel();
-    }
-  }
-}
+/* ------------------------------ Pantalla: Debate ----------------------------- */
 
 function startDiscussionPhase() {
-  clearRoundTimer();
-  round.timerSeconds = DEFAULT_TIMER_SECONDS;
-  round.timerRunning = true;
-  round.timerIntervalId = setInterval(tickTimer, 1000);
-  updateTimerDisplay();
-  updateTimerToggleLabel();
-  showScreen('discussion');
+  const starter = Math.floor(Math.random() * round.names.length);
+  el.starterName.textContent = round.names[starter];
+  el.starterDirection.textContent = Math.random() < 0.5
+    ? 'y seguid en el sentido de las agujas del reloj ↻'
+    : 'y seguid en sentido contrario a las agujas del reloj ↺';
+  el.discussionHelp.innerHTML = MODE_HELP[round.mode];
+
+  el.timerBlock.hidden = settings.timerMinutes === 0;
+  if (settings.timerMinutes > 0) timer.start(settings.timerMinutes * 60);
+  Kit.sfx.reveal();
+  Kit.showScreen('discussion');
 }
 
-function adjustTimer(deltaSeconds) {
-  if (!round) return;
-  round.timerSeconds = clamp(round.timerSeconds + deltaSeconds, MIN_TIMER_SECONDS, MAX_TIMER_SECONDS);
-  updateTimerDisplay();
-}
+/* ------------------------------ Pantalla: Votación ---------------------------- */
 
-function toggleTimer() {
-  if (!round) return;
-  if (round.timerSeconds === 0) return;
-  round.timerRunning = !round.timerRunning;
-  updateTimerToggleLabel();
-}
-
-function skipTimer() {
-  if (!round) return;
-  round.timerRunning = false;
-  round.timerSeconds = 0;
-  clearRoundTimer();
-  updateTimerDisplay();
-  updateTimerToggleLabel();
-}
-
-/* -------------------------------- Pantalla: Resultados --------------------------- */
-
-function endRound() {
-  if (!round) return;
-  clearRoundTimer();
-
-  el.resultsWord.textContent = round.secretWord;
-  el.resultsCategory.textContent = round.categoryLabel;
-
-  const impostorNumbers = Array.from(round.impostorIndices)
-    .map((i) => i + 1)
-    .sort((a, b) => a - b);
-
-  el.resultsImpostors.innerHTML = '';
-  impostorNumbers.forEach((num) => {
-    const li = document.createElement('li');
-    li.textContent = `Jugador ${num}`;
-    el.resultsImpostors.appendChild(li);
+function startVote() {
+  timer.stop();
+  el.voteTitle.textContent = round.mode === 'infiltrado'
+    ? '¿Quién es el infiltrado?'
+    : round.mode === 'caos' ? '¿Quién es impostor?' : '¿Quién es el impostor?';
+  Kit.runVote(el.voteArea, {
+    names: round.names,
+    secret: settings.secretVote,
+    allowNone: round.mode === 'caos',
+    noneLabel: '🙅 No hay impostor',
+    onDone: finishVote
   });
+  Kit.showScreen('vote');
+}
 
-  lastWord = round.secretWord;
-  showScreen('results');
+function finishVote(result) {
+  const n = round.names.length;
+  const k = round.impostors.size;
+  round.vote = result;
+  round.tally = Kit.tally(result, Kit.clamp(k, 1, n));
+  showResultsScreen();
+
+  if (k > 0 && k < n) {
+    const caught = round.tally.accused.filter((i) => round.impostors.has(i));
+    round.allCaught = caught.length === k;
+    if (round.allCaught && round.mode !== 'infiltrado') {
+      askForGuess();
+      return;
+    }
+  }
+  finalizeRound(false);
+}
+
+/* ------------------------------ Pantalla: Resultados -------------------------- */
+
+function showResultsScreen() {
+  timer.stop();
+  el.guessBox.hidden = true;
+  el.revealBox.hidden = true;
+  el.scoreboardCard.hidden = true;
+  el.resultsActions.hidden = true;
+  Kit.showScreen('results');
+}
+
+function setVerdict(type, emoji, title, text) {
+  el.verdict.className = 'verdict' + (type ? ` is-${type}` : '');
+  el.verdictEmoji.textContent = emoji;
+  el.verdictTitle.textContent = title;
+  el.verdictText.innerHTML = text;
+  // Reinicia la animación del emoji.
+  el.verdictEmoji.style.animation = 'none';
+  void el.verdictEmoji.offsetWidth;
+  el.verdictEmoji.style.animation = '';
+}
+
+function namesOf(indices) {
+  return indices.map((i) => `<strong>${Kit.esc(round.names[i])}</strong>`).join(' y ');
+}
+
+function impostorList() {
+  return Array.from(round.impostors).sort((a, b) => a - b);
+}
+
+function askForGuess() {
+  const imps = impostorList();
+  const plural = imps.length > 1;
+  setVerdict('', '🎯', plural ? '¡Pillados!' : '¡Pillado!',
+    `Habéis descubierto a ${namesOf(imps)}. Pero aún ${plural ? 'pueden' : 'puede'} ganar…`);
+  el.guessText.innerHTML = `Última oportunidad: ${namesOf(imps)}, decid en voz alta cuál creéis que es la palabra secreta.`;
+  el.guessBox.hidden = false;
+  Kit.sfx.reveal();
+}
+
+function finalizeRound(guessed) {
+  const n = round.names.length;
+  const imps = impostorList();
+  const k = imps.length;
+  const t = round.tally;
+  const isInf = round.mode === 'infiltrado';
+  const who = isInf ? 'infiltrado' : 'impostor';
+  const crew = round.names.map((_, i) => i).filter((i) => !round.impostors.has(i));
+
+  scores.startRound();
+  let crewWins = false;
+  let scored = true;
+
+  if (k === 0) {
+    scored = false;
+    if (t.noneWins) {
+      crewWins = true;
+      scored = true;
+      setVerdict('win', '😇', '¡No había impostor!', 'Lo habéis clavado: esta ronda no había ningún impostor. Todos ganáis 1 punto.');
+    } else {
+      setVerdict('lose', '😇', 'No había ningún impostor', t.accused.length
+        ? `Habéis acusado a ${namesOf(t.accused)}… que era inocente. Nadie puntúa.`
+        : 'Nadie era impostor y nadie puntúa esta ronda.');
+    }
+  } else if (k === n) {
+    scored = false;
+    setVerdict('lose', '🤯', '¡Todos erais impostores!', 'Nadie tenía la palabra… y nadie se dio cuenta. Ronda sin puntos, pero con historia.');
+  } else if (round.allCaught && !guessed) {
+    crewWins = true;
+    const label = isInf ? (k > 1 ? 'Infiltrados' : 'Infiltrado') : (k > 1 ? 'Impostores' : 'Impostor');
+    setVerdict('win', '🎉', `¡${label} descubierto${k > 1 ? 's' : ''}!`,
+      `Bien jugado: ${namesOf(imps)} no ${k > 1 ? 'pudieron' : 'pudo'} engañaros. El grupo gana 1 punto cada uno.`);
+  } else if (round.allCaught && guessed) {
+    setVerdict('lose', '😈', '¡Os la ha colado!', `Pillasteis a ${namesOf(imps)}, pero ${k > 1 ? 'adivinaron' : 'adivinó'} la palabra. 2 puntos por ${who}.`);
+  } else if (t.noneWins) {
+    setVerdict('lose', '🙈', '¡Sí que había impostor!', `Votasteis que no había nadie, pero ${namesOf(imps)} ${k > 1 ? 'eran impostores' : 'era el impostor'}. 2 puntos por impostor.`);
+  } else if (t.tie) {
+    setVerdict('lose', '🤝', 'Empate en la votación', `No se expulsa a nadie y ${k > 1 ? 'los impostores se escapan' : `el ${who} se escapa`}. 2 puntos por ${who}.`);
+  } else {
+    const innocents = t.accused.filter((i) => !round.impostors.has(i));
+    setVerdict('lose', '😬', innocents.length ? '¡Expulsasteis a un inocente!' : `El ${who} se ha librado`,
+      (innocents.length ? `${namesOf(innocents)} no ${innocents.length > 1 ? 'eran' : 'era'} ${who}. ` : '') +
+      `${namesOf(imps)} gana${k > 1 ? 'n' : ''} 2 puntos.`);
+  }
+
+  if (scored) {
+    if (crewWins) {
+      (k === 0 ? round.names.map((_, i) => i) : crew).forEach((i) => scores.add(round.names[i], 1));
+    } else {
+      imps.forEach((i) => scores.add(round.names[i], 2));
+    }
+  }
+  scores.endRound();
+  if (crewWins) {
+    Kit.sfx.win();
+    Kit.confetti();
+  } else {
+    Kit.sfx.lose();
+  }
+  Kit.buzz(crewWins ? [60, 40, 60] : 200);
+
+  renderRevealBox();
+  scores.render(el.scoreboard, round.names);
+  el.guessBox.hidden = true;
+  el.scoreboardCard.hidden = false;
+  el.resultsActions.hidden = false;
+}
+
+function renderRevealBox() {
+  const imps = impostorList();
+  const isInf = round.mode === 'infiltrado';
+  el.resultsWordLabel.textContent = isInf ? 'La palabra del grupo era' : 'La palabra secreta era';
+  el.resultsWord.textContent = round.word;
+  el.resultsCategory.textContent = `${round.catEmoji} ${round.catLabel}` +
+    (round.mode === 'pista' && round.hint ? ` · Pista del impostor: ${round.hint}` : '');
+  el.resultsAltWrap.hidden = !isInf;
+  el.resultsAltWord.textContent = round.altWord || '';
+
+  el.resultsImpostorsLabel.textContent = isInf
+    ? (imps.length > 1 ? 'Los infiltrados eran' : 'El infiltrado era')
+    : (imps.length > 1 ? 'Los impostores eran' : 'El impostor era');
+  el.resultsImpostors.classList.toggle('is-neutral', imps.length === 0);
+  el.resultsImpostors.innerHTML = imps.length
+    ? imps.map((i) => `<li>${Kit.esc(round.names[i])}</li>`).join('')
+    : '<li>Nadie 😇</li>';
+
+  if (round.vote) {
+    const ranked = round.vote.votes
+      .map((v, i) => ({ v, name: round.names[i] }))
+      .filter((x) => x.v > 0)
+      .sort((a, b) => b.v - a.v);
+    if (round.vote.none) ranked.push({ v: round.vote.none, name: 'No hay impostor' });
+    el.voteSummary.textContent = ranked.length
+      ? 'Votos: ' + ranked.map((x) => `${x.name} ${x.v}`).join(' · ')
+      : '';
+  } else {
+    el.voteSummary.textContent = '';
+  }
+  el.revealBox.hidden = false;
+}
+
+function revealWithoutVote() {
+  round.vote = null;
+  showResultsScreen();
+  setVerdict('', '👀', 'Revelación', 'Sin votación no hay puntos esta ronda.');
+  renderRevealBox();
+  if (scores.rounds > 0) {
+    scores.startRound();
+    scores.render(el.scoreboard, round.names);
+    el.scoreboardCard.hidden = false;
+  }
+  el.resultsActions.hidden = false;
+  Kit.sfx.reveal();
 }
 
 /* ---------------------------------- Ronda ----------------------------------- */
 
 function startNewRound() {
-  const picked = pickWordForCategory(settings.categoryKey);
+  const pool = buildPool();
+  if (!pool.length) {
+    backToSetup();
+    return;
+  }
+  const n = settings.playerCount;
+  const item = pickFromPool(pool);
+  const cat = getCategory(item.key);
+  const k = settings.mode === 'caos'
+    ? chaosImpostorCount(n)
+    : Kit.clamp(settings.impostorCount, 1, maxImpostorsFor(n));
+
+  let word = item.word;
+  let altWord = null;
+  if (settings.mode === 'infiltrado') {
+    const swap = Math.random() < 0.5;
+    word = swap ? item.b : item.a;
+    altWord = swap ? item.a : item.b;
+  }
+
   round = {
-    secretWord: picked.word,
-    categoryLabel: picked.categoryLabel,
-    impostorIndices: pickImpostorIndices(settings.playerCount, settings.impostorCount),
-    currentIndex: 0,
-    hasRevealedCurrent: false,
-    timerSeconds: DEFAULT_TIMER_SECONDS,
-    timerRunning: false,
-    timerIntervalId: null
+    mode: settings.mode,
+    names: Kit.playerNames(n),
+    impostors: Kit.pickIndices(n, k),
+    word,
+    altWord,
+    hint: item.hint || '',
+    catLabel: cat.label,
+    catEmoji: cat.emoji,
+    current: 0,
+    vote: null,
+    tally: null,
+    allCaught: false
   };
-  showScreen('reveal');
+
+  el.gameBarTitle.textContent = `Ronda ${scores.rounds + 1} · ${modeInfo(round.mode).label}`;
+  Kit.keepAwake(true);
+  Kit.showScreen('reveal');
   renderRevealForCurrentPlayer();
 }
 
 function backToSetup() {
-  clearRoundTimer();
+  if (timer) timer.stop();
   round = null;
+  Kit.keepAwake(false);
   renderSetup();
-  showScreen('setup');
+  Kit.showScreen('setup');
+}
+
+function confirmExit() {
+  if (!round) return true;
+  return window.confirm('¿Salir de la partida? Se perderá la ronda actual (el marcador se mantiene).');
 }
 
 /* --------------------------------- Eventos ----------------------------------- */
 
 function bindEvents() {
-  el.playerMinus.addEventListener('click', () => changePlayerCount(-1));
-  el.playerPlus.addEventListener('click', () => changePlayerCount(1));
-  el.impostorMinus.addEventListener('click', () => changeImpostorCount(-1));
-  el.impostorPlus.addEventListener('click', () => changeImpostorCount(1));
+  el.btnPlayerMinus.addEventListener('click', () => changePlayerCount(-1));
+  el.btnPlayerPlus.addEventListener('click', () => changePlayerCount(1));
+  el.btnImpostorMinus.addEventListener('click', () => changeImpostorCount(-1));
+  el.btnImpostorPlus.addEventListener('click', () => changeImpostorCount(1));
+  el.btnTimeMinus.addEventListener('click', () => changeTimer(-1));
+  el.btnTimePlus.addEventListener('click', () => changeTimer(1));
+  el.btnShuffleNames.addEventListener('click', () => {
+    Kit.shuffleNames(el.namesGrid, settings.playerCount);
+    Kit.toast('Orden mezclado 🔀');
+  });
 
-  el.btnStart.addEventListener('click', () => {
+  el.btnCatAll.addEventListener('click', () => {
+    settings.categories = availableCategoryKeys();
     saveSettings();
+    renderSetup();
+  });
+  el.btnCatNone.addEventListener('click', () => {
+    settings.categories = [];
+    saveSettings();
+    renderSetup();
+  });
+
+  el.customWords.value = customText;
+  el.customWords.addEventListener('input', () => {
+    const hadCustom = custom.words.length > 0;
+    customText = el.customWords.value;
+    custom = parseCustom(customText);
+    Kit.save(CUSTOM_KEY, customText);
+    if (custom.words.length && !hadCustom && !settings.categories.includes(CUSTOM_CAT)) {
+      settings.categories = settings.categories.concat(CUSTOM_CAT);
+      saveSettings();
+    }
+    renderCategories();
+  });
+
+  el.optShowCategory.addEventListener('change', () => {
+    settings.showCategory = el.optShowCategory.checked;
+    saveSettings();
+  });
+  el.optSecretVote.addEventListener('change', () => {
+    settings.secretVote = el.optSecretVote.checked;
+    saveSettings();
+  });
+  Kit.bindPrefToggle(el.optSound, 'sound');
+  Kit.bindPrefToggle(el.optVibrate, 'vibrate');
+
+  el.btnResetScores.addEventListener('click', () => {
+    scores.reset();
+    renderSetup();
+    Kit.toast('Marcador a cero');
+  });
+
+  el.btnStartGame.addEventListener('click', () => {
+    saveSettings();
+    try { history.pushState({ inGame: true }, ''); } catch (err) { /* sin historial */ }
     startNewRound();
   });
 
-  // Mantener pulsado para revelar: cubrimos punteros (táctil + ratón) y añadimos
-  // touch/mouse como refuerzo por compatibilidad. Nunca se muestra nada al
-  // simple "click"; solo mientras el dedo/ratón permanece pulsado.
-  const press = (e) => startRevealHold(e);
-  const release = (e) => { if (e) e.preventDefault(); endRevealHold(); };
-
-  el.holdBtn.addEventListener('pointerdown', press);
-  el.holdBtn.addEventListener('pointerup', release);
-  el.holdBtn.addEventListener('pointerleave', release);
-  el.holdBtn.addEventListener('pointercancel', release);
-  el.holdBtn.addEventListener('touchstart', press, { passive: false });
-  el.holdBtn.addEventListener('touchend', release);
-  el.holdBtn.addEventListener('touchcancel', release);
-  el.holdBtn.addEventListener('contextmenu', (e) => e.preventDefault());
-  el.holdBtn.addEventListener('dragstart', (e) => e.preventDefault());
-
+  Kit.bindHold(el.holdRevealBtn, startRevealHold, endRevealHold);
   el.btnNextPlayer.addEventListener('click', goToNextPlayer);
 
-  el.timerMinus.addEventListener('click', () => adjustTimer(-TIMER_STEP));
-  el.timerPlus.addEventListener('click', () => adjustTimer(TIMER_STEP));
-  el.timerToggle.addEventListener('click', toggleTimer);
-  el.timerSkip.addEventListener('click', skipTimer);
-  el.btnRevealImpostor.addEventListener('click', endRound);
+  timer = Kit.createTimer({
+    display: el.timerDisplay,
+    ring: el.timerRing,
+    toggleBtn: el.btnTimerToggle,
+    onEnd: () => Kit.toast('⏰ ¡Se acabó el tiempo! A votar')
+  });
+  el.btnTimerMinus.addEventListener('click', () => timer.adjust(-TIMER_STEP));
+  el.btnTimerPlus.addEventListener('click', () => timer.adjust(TIMER_STEP));
+  el.btnTimerToggle.addEventListener('click', () => timer.toggle());
+  el.btnGoVote.addEventListener('click', startVote);
+  el.btnRevealDirect.addEventListener('click', revealWithoutVote);
+
+  el.btnGuessYes.addEventListener('click', () => finalizeRound(true));
+  el.btnGuessNo.addEventListener('click', () => finalizeRound(false));
 
   el.btnPlayAgain.addEventListener('click', startNewRound);
   el.btnNewGame.addEventListener('click', backToSetup);
+  el.btnExit.addEventListener('click', () => {
+    if (confirmExit()) backToSetup();
+  });
 
-  // Si el usuario recarga o cierra mientras hay una ronda activa, no hay nada
-  // que limpiar: `round` vive solo en memoria y desaparece automáticamente.
+  // El botón «atrás» del móvil no saca de la página en mitad de una ronda.
+  window.addEventListener('popstate', () => {
+    if (!round) return;
+    if (confirmExit()) {
+      backToSetup();
+    } else {
+      try { history.pushState({ inGame: true }, ''); } catch (err) { /* sin historial */ }
+    }
+  });
 }
 
 /* ---------------------------------- Init ------------------------------------- */
@@ -583,9 +761,9 @@ function bindEvents() {
 function init() {
   cacheDom();
   loadSettings();
-  renderSetup();
   bindEvents();
-  showScreen('setup');
+  renderSetup();
+  Kit.showScreen('setup');
 }
 
 document.addEventListener('DOMContentLoaded', init);
