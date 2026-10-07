@@ -552,7 +552,7 @@ strong { color: var(--text); }
 
 .hold-back {
   transform: rotateY(180deg);
-  background: linear-gradient(180deg, #1b1630, #120e20);
+  background: linear-gradient(180deg, var(--bg-2), var(--bg));
   border: 2px solid rgba(var(--accent-rgb), 0.7);
   box-shadow: var(--shadow);
 }
