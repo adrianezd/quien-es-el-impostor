@@ -176,7 +176,8 @@ function loadSettings() {
 }
 
 function saveSettings() {
-  Kit.save(SETTINGS_KEY, settings);
+  // en una sala no se guarda su número de jugadores como el de «mismo móvil»
+  Kit.save(SETTINGS_KEY, salaBackup ? Object.assign({}, settings, salaBackup) : settings);
 }
 
 /* ---------------------------------- DOM -------------------------------------- */
@@ -330,41 +331,37 @@ function clearRole() {
   el.roleExtra.innerHTML = '';
 }
 
-function populateRole() {
-  const i = round.current;
-  const isImpostor = round.impostors.has(i);
-  const catText = `Categoría: ${round.catLabel}`;
+/** Lo que ve el jugador i en su carta (también lo usa la sala). extra va en HTML. */
+function roleCard(r, i) {
+  const isImpostor = r.impostors.has(i);
+  const catText = `Categoría: ${r.catLabel}`;
 
-  if (round.mode === 'infiltrado') {
-    el.roleCategoryLabel.textContent = catText;
-    el.roleEmoji.textContent = round.catEmoji;
-    el.roleContent.textContent = isImpostor ? round.altWord : round.word;
-    el.roleExtra.textContent = 'Da pistas sin decir tu palabra';
-    return;
+  if (r.mode === 'infiltrado') {
+    return { label: catText, emoji: r.catEmoji, content: isImpostor ? r.altWord : r.word, extra: 'Da pistas sin decir tu palabra' };
   }
-
   if (!isImpostor) {
-    el.roleCategoryLabel.textContent = catText;
-    el.roleEmoji.textContent = round.catEmoji;
-    el.roleContent.textContent = round.word;
-    el.roleExtra.textContent = round.mode === 'caos' ? '¿Habrá impostor? 🌀' : 'Da pistas sin decirla';
-    return;
+    return { label: catText, emoji: r.catEmoji, content: r.word, extra: r.mode === 'caos' ? '¿Habrá impostor? 🌀' : 'Da pistas sin decirla' };
   }
+  let extra = 'Disimula y descubre la palabra';
+  if (r.mode === 'pista') {
+    extra = r.hint ? `Pista: <strong>${Kit.esc(r.hint)}</strong>` : 'Esta palabra no tiene pista: ¡improvisa!';
+  } else if (r.mode === 'caos') {
+    extra = '¿Estarás solo? 🌀';
+  }
+  return {
+    label: settings.showCategory ? catText : 'Categoría secreta',
+    emoji: '🕵️', content: 'Eres el impostor', extra, alert: true, impostor: true
+  };
+}
 
-  el.rolePanel.classList.add('is-alert');
-  el.roleCategoryLabel.textContent = settings.showCategory ? catText : 'Categoría secreta';
-  el.roleEmoji.textContent = '🕵️';
-  el.roleContent.textContent = 'Eres el impostor';
-  el.roleContent.classList.add('is-impostor');
-  if (round.mode === 'pista') {
-    el.roleExtra.innerHTML = round.hint
-      ? `Pista: <strong>${Kit.esc(round.hint)}</strong>`
-      : 'Esta palabra no tiene pista: ¡improvisa!';
-  } else if (round.mode === 'caos') {
-    el.roleExtra.textContent = '¿Estarás solo? 🌀';
-  } else {
-    el.roleExtra.textContent = 'Disimula y descubre la palabra';
-  }
+function populateRole() {
+  const c = roleCard(round, round.current);
+  el.rolePanel.classList.toggle('is-alert', Boolean(c.alert));
+  el.roleCategoryLabel.textContent = c.label;
+  el.roleEmoji.textContent = c.emoji;
+  el.roleContent.textContent = c.content;
+  el.roleContent.classList.toggle('is-impostor', Boolean(c.impostor));
+  el.roleExtra.innerHTML = c.extra;
 }
 
 function startRevealHold() {
@@ -659,6 +656,78 @@ function confirmExit() {
   if (!round) return true;
   return window.confirm('¿Salir de la partida? Se perderá la ronda actual (el marcador se mantiene).');
 }
+
+/* --------------------------- Con código de sala ------------------------------ */
+
+// Mientras se configura una sala, los jugadores son los que han entrado:
+// aquí se guarda el número de «mismo móvil» para devolverlo al salir.
+let salaBackup = null;
+
+function salaHosting(on, players) {
+  if (on) {
+    if (!salaBackup) salaBackup = { playerCount: settings.playerCount };
+    settings.playerCount = Kit.clamp(players, MIN_PLAYERS, MAX_PLAYERS);
+    settings.impostorCount = Kit.clamp(settings.impostorCount, 1, maxImpostorsFor(settings.playerCount));
+  } else if (salaBackup) {
+    settings.playerCount = salaBackup.playerCount;
+    salaBackup = null;
+  }
+  renderSetup();
+}
+
+/** Reparto de una ronda de sala para n jugadores, con los ajustes actuales. */
+function salaDeal(n) {
+  const pool = buildPool();
+  if (!pool.length) return { error: 'Elige al menos una categoría' };
+  const item = pickFromPool(pool);
+  const cat = getCategory(item.key);
+  const k = settings.mode === 'caos' ? chaosImpostorCount(n) : Kit.clamp(settings.impostorCount, 1, maxImpostorsFor(n));
+  let word = item.word;
+  let altWord = null;
+  if (settings.mode === 'infiltrado') {
+    const swap = Math.random() < 0.5;
+    word = swap ? item.b : item.a;
+    altWord = swap ? item.a : item.b;
+  }
+  const r = {
+    mode: settings.mode, impostors: Kit.pickIndices(n, k), word, altWord,
+    hint: item.hint || '', catLabel: cat.label, catEmoji: cat.emoji
+  };
+  const inf = r.mode === 'infiltrado';
+  return {
+    cards: Array.from({ length: n }, (_, i) => roleCard(r, i)),
+    special: Array.from(r.impostors),
+    info: { mode: r.mode, word, altWord, hint: r.hint, catLabel: r.catLabel, catEmoji: r.catEmoji },
+    title: modeInfo(r.mode).label,
+    help: MODE_HELP[r.mode],
+    seconds: settings.timerMinutes * 60,
+    voteTitle: inf ? '¿Quién es el infiltrado?' : r.mode === 'caos' ? '¿Quién es impostor?' : '¿Quién es el impostor?',
+    allowNone: r.mode === 'caos',
+    noneLabel: '🙅 No hay impostor',
+    who: inf ? { one: 'infiltrado', many: 'infiltrados', One: 'Infiltrado', Many: 'Infiltrados', the: 'el infiltrado', The: 'El infiltrado' } : { one: 'impostor', many: 'impostores', One: 'Impostor', Many: 'Impostores', the: 'el impostor', The: 'El impostor' }
+  };
+}
+
+Sala.configure({
+  id: 'impostor',
+  maxPlayers: MAX_PLAYERS,
+  timerStep: TIMER_STEP,
+  holdPrompt: 'Mantén pulsado para ver tu rol',
+  who: { one: 'impostor', many: 'impostores', One: 'Impostor', Many: 'Impostores', the: 'el impostor', The: 'El impostor' },
+  hosting: salaHosting,
+  deal: salaDeal,
+  onRoundEnd: () => {},
+  resultsHtml(info, { names, special, esc }) {
+    const inf = info.mode === 'infiltrado';
+    const k = special.length;
+    return `<p class="results-label">${inf ? 'La palabra del grupo era' : 'La palabra secreta era'}</p>` +
+      `<p class="results-word">${esc(info.word)}</p>` +
+      `<p class="results-meta">${esc(`${info.catEmoji} ${info.catLabel}`)}${info.mode === 'pista' && info.hint ? ` · Pista del impostor: ${esc(info.hint)}` : ''}</p>` +
+      (inf ? `<p class="results-label">${k > 1 ? 'Los infiltrados tenían' : 'El infiltrado tenía'}</p><p class="results-word is-alt">${esc(info.altWord)}</p>` : '') +
+      `<p class="results-label">${inf ? (k > 1 ? 'Los infiltrados eran' : 'El infiltrado era') : (k > 1 ? 'Los impostores eran' : 'El impostor era')}</p>` +
+      `<ul class="chips${k ? '' : ' is-neutral'}">${k ? special.slice().sort((a, b) => a - b).map((i) => `<li>${esc(names[i])}</li>`).join('') : '<li>Nadie 😇</li>'}</ul>`;
+  }
+});
 
 /* --------------------------------- Eventos ----------------------------------- */
 

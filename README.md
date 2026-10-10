@@ -1,6 +1,6 @@
 # ¿Quién es el Impostor?
 
-Juego de fiesta gratuito para grupos, pensado para jugarse en **un solo móvil compartido** que se va pasando entre los jugadores. Sin cuentas, sin descargas y sin internet (tras la primera visita queda guardado en el móvil).
+Juego de fiesta gratuito para grupos, pensado para jugarse en **un solo móvil compartido** que se va pasando entre los jugadores, o **cada uno con su móvil** entrando en la misma sala con un código. Sin cuentas, sin descargas y sin internet (tras la primera visita queda guardado en el móvil).
 
 🔗 **Jugar ahora:** https://adrianezd.github.io/quien-es-el-impostor/
 
@@ -24,6 +24,18 @@ Juego de fiesta gratuito para grupos, pensado para jugarse en **un solo móvil c
 - Última oportunidad del impostor para adivinar la palabra y **marcador** entre rondas.
 - Pantalla siempre encendida durante la partida y funcionamiento sin conexión (service worker).
 
+## Con código de sala
+
+Además de pasarse un móvil, se puede jugar **cada uno con el suyo**. En los ajustes, la pestaña «Con código de sala»:
+
+1. Uno pone su nombre y pulsa **Crear sala**: sale un código de 5 letras (y un botón para compartir el enlace, que ya lleva el código).
+2. El resto pone su nombre y el código y pulsa **Unirse**.
+3. Quien creó la sala la configura con los ajustes normales del juego (modo, categorías, impostores, tiempo…) y también juega. Los jugadores son los que han entrado.
+4. En cada ronda, cada uno ve su carta en su móvil manteniendo pulsado, se vota desde cada móvil y al revelar todos ven el resultado.
+
+
+Los móviles se comunican a través de [ntfy.sh](https://ntfy.sh) (servicio gratuito de mensajes, sin cuentas), un canal por sala, sin que los mensajes se guarden en el servidor. En este modo hace falta internet. La lógica está en `sala.js` y `sala.css`, iguales en los tres juegos de fiesta.
+
 ## Puntuación
 
 - El grupo expulsa a todos los impostores y estos no adivinan la palabra → **+1** a cada jugador del grupo.
@@ -41,6 +53,7 @@ Juego de fiesta **original**, basado en el concepto genérico de "deducción soc
 
 Sitio estático sin dependencias ni build: HTML, CSS y JavaScript vanilla servidos por GitHub Pages.
 
+- `sala.js` y `sala.css` — modo con código de sala (iguales en los tres juegos).
 - `kit.js` — piezas compartidas con los otros juegos (nombres, cronómetro, votación, marcador, sonido…).
 - `words.js` — banco de palabras, pistas y parejas.
 - `script.js` — lógica del juego.
